@@ -1,7 +1,7 @@
 import json
 import os
 from bookmark.components.widgets import ControlTree
-from bookmark.scripts import del_bookmark
+from bookmark.scripts import del_bookmark, ignore_element
 from bisect import bisect
 from rich.syntax import Syntax
 from rich.align import Align
@@ -278,6 +278,13 @@ class DirNode(BookmarkNode):
             child.ignores = self.ignores
             child.reload()
 
+    def expand_upward(self):
+        node = self
+        while node != node.tree:
+            if not node.expanded:
+                node.expanded = True
+            node = node.parent
+
 
 class DirTree(ControlTree):
     def __init__(
@@ -441,10 +448,22 @@ class DirTree(ControlTree):
         if self.cursor not in self.nodes:
             self.cursor = 0
             self.nodes[self.cursor].toggle_highlight()
+            self.center()
 
     def process(self, recursive=False, max_depth=-1):
         for child in self.children:
             child.process(recursive=recursive, max_depth=max_depth)
+
+    def ignore(self):
+        label = self.bookmark_name
+        try:
+            element = self.nodes[self.cursor].label.plain
+        except AttributeError:
+            node = self.nodes[self.cursor]
+            element = node.label[node.label.rfind("]") + 1 :]
+        ignore_element(label, element)
+        self.ignores.append(element)
+        self.reload()
 
 
 class BookmarkTree(ControlTree):
@@ -569,6 +588,7 @@ class BookmarkTree(ControlTree):
             dir_tree.add_recursive(node.path)
             dir_tree.panel = self.app.layout["directory"].renderable
             dir_tree.panel.y_top = 0
+            dir_tree.bookmark_name = node.label[node.label.rfind("]") + 1 :]
             self.dir_trees[node.id] = dir_tree
         else:
             dir_tree.ignores = ignores
