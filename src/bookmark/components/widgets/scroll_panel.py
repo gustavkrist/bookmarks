@@ -1,5 +1,5 @@
 import os
-from bookmark.components.widgets import BookmarkTree
+from bookmark.components.widgets import BookmarkTree, DirTree
 from rich.segment import Segment
 from rich.syntax import Syntax
 from rich.align import Align
@@ -116,6 +116,13 @@ class ScrollPanel(Panel):
         renderable = self.renderable
         if isinstance(renderable, BookmarkTree):
             renderable.remove()
+        else:
+            pass
+
+    def ignore(self):
+        renderable = self.renderable
+        if isinstance(renderable, DirTree):
+            renderable.ignore()
         else:
             pass
 
