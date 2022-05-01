@@ -70,7 +70,8 @@ class App:
             "c": lambda: self.selected.renderable.open_in_vscode(),
             "v": lambda: self.selected.renderable.open_in_vim(),
             "z": lambda: self.selected.renderable.change_dir(),
-            "t": lambda: self.bookmarks.reload(),
+            "r": lambda: self.bookmarks.reload(),
+            "\x1d": lambda: self.selected.renderable.ignore(),
         }
         self.selected = self.layout["bookmarks"]
         self.previous_preview = self.layout["preview"]
@@ -120,7 +121,6 @@ class App:
             self.mode = None
         self.focus("searchbar")
         self.searchbar.toggle_show()
-        self.console.log(self.mode)
 
     def run(self, init=True):
         if init:
@@ -136,9 +136,7 @@ class App:
                     if self.mode is None:
                         self.toggle_search()
                     elif self.mode == "search_suspended":
-                        self.mode = "search"
-                        self.focus("searchbar")
-                        self.toggle_search()
+                        self.searchbar.toggle_show()
                         self.toggle_search()
                     elif self.mode == "search":
                         self.searchbar.write(key)
