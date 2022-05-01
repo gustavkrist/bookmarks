@@ -9,13 +9,16 @@ click.rich_click.ERRORS_SUGGESTION = "Try running the --help flag for more infor
 click.rich_click.MAX_WIDTH = 100
 # click.rich_click.OPTION_GROUPS = {
 #     "bm": [
-#         {"name": "Basic Usage", "options": [""]},
-#         {"name": "Advanced Usage", "options": ["-r", "-h"]},
+#         {"open": ["-r"]},
+#         # {"name": "Advanced Usage", "options": ["-r", "-h"]},
 #     ]
 # }
-# click.rich_click.COMMAND_GROUPS = {
-#     "cli": [{"name": "Bookmark management", "commands": ["add", "rm", "list"]}]
-# }
+click.rich_click.COMMAND_GROUPS = {
+    "bm": [
+        {"name": "Dashboard", "commands": ["open"]},
+        {"name": "Bookmark management", "commands": ["add", "rm", "list"]},
+    ]
+}
 
 
 @click.group(
@@ -42,6 +45,31 @@ def cli(ctx, restart, help):
     If no options or subcommands are passed, the dashboard is opened.
 
     You can try using --help at the top level and also for specific subcommands.
+    """
+    if ctx.invoked_subcommand is None:
+        if help:
+            click.echo(ctx.get_help())
+            ctx.exit()
+        else:
+            ctx.invoke(open)
+
+
+@cli.command(options_metavar="<options>")
+@click.pass_context
+@click.option(
+    "-r",
+    "--restart",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Start a fresh instance",
+)
+@click.option(
+    "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
+)
+def open(ctx, restart, help):
+    """
+    Opens the bookmark dashboard
     """
     if ctx.invoked_subcommand is None:
         if help:
