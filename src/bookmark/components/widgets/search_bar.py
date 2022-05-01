@@ -5,6 +5,26 @@ from rich.panel import Panel
 from rich.text import Text
 
 
+class SearchDirTree(DirTree):
+    def enter(self):
+        layout = self.app.layout["searchbar"]
+        for node in self.bar.old_tree.nodes.values():
+            node.label = self.bar.old_labels[node.id]
+            node.parent = self.bar.old_parents[node.id]
+        self.bar.old_tree.cursor = self.bar.searchtree.cursor
+        self.bar.searchtree.nodes[self.bar.searchtree.cursor].toggle_highlight()
+        self.bar.old_tree.nodes[self.bar.old_tree.cursor].under_cursor = False
+        self.bar.old_tree.nodes[self.bar.old_tree.cursor].toggle_highlight()
+        self.bar.old_tree.nodes[self.bar.old_tree.cursor].expand_upward()
+        self.bar.old_tree.center()
+        layout.visible = False
+        self.app.searching.renderable.renderable = self.bar.old_tree
+        self.app.mode = None
+        self.app.focus("searchbar")
+        self.app.focus("searchbar")
+        self.bar.clear()
+
+
 class SearchBar(Panel):
     def __init__(
         self,
@@ -88,7 +108,7 @@ class SearchBar(Panel):
                 searchtree.panel.y_top = 0
             else:
                 tree.process(recursive=True, max_depth=4)
-                searchtree = DirTree(
+                searchtree = SearchDirTree(
                     tree.label,
                     style="cyan",
                     guide_style="cyan",
@@ -97,6 +117,7 @@ class SearchBar(Panel):
                 )
                 searchtree.panel = self.app.layout["directory"].renderable
                 searchtree.panel.y_top = 0
+                searchtree.bar = self
             searchtree.children = list(tree.nodes.values())[1:]
             searchtree.nodes = {node.id: node for node in searchtree.children}
             self.old_tree = tree
