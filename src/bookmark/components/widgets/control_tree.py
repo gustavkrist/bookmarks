@@ -47,9 +47,16 @@ class ControlTree(Tree):
 
     def toggle_highlight(self):
         if self.under_cursor:
-            self.label = self.label[self.label.rfind("]") + 1 :]
+            try:
+                self.label = self.label[self.label.rfind("]") + 1 :]
+            except AttributeError:
+                self.label.style = "none"
         else:
-            self.label = "[bold italic]" + self.label
+            try:
+                self.label = "[bold italic]" + self.label
+            except TypeError:
+                self.label.style = "bold italic"
+                pass
         self.under_cursor = not self.under_cursor
 
     def cursor_down(self):
@@ -81,6 +88,18 @@ class ControlTree(Tree):
         y_top = self.panel.y_top
         if cursor_line - y_top < panel_height // 2 and y_top > 0:
             self.panel.y_top -= 1
+
+    def center(self):
+        cursor_line = self.cursor_line
+        tree_height = self.visible_height
+        panel_height = self.panel.actual_height
+        if tree_height <= panel_height:
+            y_top = 0
+        elif tree_height - cursor_line <= panel_height:
+            y_top = tree_height - panel_height + 2
+        else:
+            y_top = cursor_line + 3 - panel_height // 2
+        self.panel.y_top = y_top
 
     @property
     def next_node(self):

@@ -1,5 +1,5 @@
 import os
-from . import BookmarkTree
+from bookmark.components.widgets import BookmarkTree
 from rich.segment import Segment
 from rich.syntax import Syntax
 from rich.align import Align

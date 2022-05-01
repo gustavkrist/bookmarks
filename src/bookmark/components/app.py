@@ -3,7 +3,7 @@ from getkey import platform, keys
 from rich.layout import Layout
 from rich.live import Live
 from rich.console import Console
-from .widgets import ScrollPanel, BookmarkTree
+from bookmark.components.widgets import ScrollPanel, BookmarkTree, SearchBar
 
 
 suppress = platform(interrupts={})
@@ -25,12 +25,19 @@ class App:
         layout["left"].split_column(
             Layout(name="bookmarks"),
             Layout(
+                SearchBar("", border_style="blue", app=self),
+                name="searchbar",
+                size=3,
+            ),
+            Layout(
                 ScrollPanel(
                     "", border_style="blue", title="Directory Overview", app=self
                 ),
                 name="directory",
             ),
         )
+        self.searchbar = layout["searchbar"].renderable
+        layout["searchbar"].visible = False
         bookmarks = BookmarkTree("Bookmarks", style="cyan", app=self)
         if os.getenv("BOOKMARK_PATH") is not None:
             bookmarks.load_file(f"{os.getenv('BOOKMARK_PATH')}")
@@ -59,7 +66,6 @@ class App:
             keys.CTRL_D: lambda: self.selected.renderable.cursor_down(5),
             keys.CTRL_U: lambda: self.selected.renderable.cursor_up(5),
             keys.CTRL_X: lambda: self.selected.renderable.remove(),
-            # keys.CTRL_X: lambda: self.console.log(str(type(self.selected.renderable))),
             keys.ENTER: lambda: self.selected.renderable.enter(),
             "c": lambda: self.selected.renderable.open_in_vscode(),
             "v": lambda: self.selected.renderable.open_in_vim(),
@@ -67,7 +73,8 @@ class App:
             "t": lambda: self.bookmarks.reload(),
         }
         self.selected = self.layout["bookmarks"]
-        self.previous = self.layout["preview"]
+        self.previous_preview = self.layout["preview"]
+        self.previous_searchbar = self.layout["searchbar"]
         self.layout["bookmarks"].renderable.toggle_focus()
         self.bookmarks.enter()
         self.focus("bookmarks")
@@ -75,17 +82,45 @@ class App:
     def focus(self, element):
         if element == "preview":
             if self.selected is not self.layout["preview"]:
-                self.previous = self.selected
+                self.previous_preview = self.selected
                 self.selected = self.layout["preview"]
             else:
-                self.selected = self.previous
-                self.previous = self.layout["preview"]
-            self.previous.renderable.toggle_focus()
+                self.selected = self.previous_preview
+                self.previous_preview = self.layout["preview"]
+            self.previous_preview.renderable.toggle_focus()
+            self.selected.renderable.toggle_focus()
+        elif element == "searchbar":
+            if self.selected is not self.layout["searchbar"]:
+                self.mode = "search"
+                self.searching = self.selected
+                self.previous_searchbar = self.selected
+                self.selected = self.layout["searchbar"]
+            else:
+                if self.mode == "search_suspended":
+                    self.mode = "search"
+                    self.previous_searchbar = self.selected
+                    self.selected = self.layout["searchbar"]
+                elif self.mode == "search":
+                    self.mode = None
+                    self.selected = self.previous_searchbar
+                    self.previous_searchbar = self.layout["searchbar"]
+                else:
+                    self.mode = "search_suspended"
+                    self.selected = self.previous_searchbar
+                    self.previous_searchbar = self.layout["searchbar"]
+            self.previous_searchbar.renderable.toggle_focus()
             self.selected.renderable.toggle_focus()
         else:
             self.selected.renderable.toggle_focus()
             self.selected = self.layout[element]
             self.selected.renderable.toggle_focus()
+
+    def toggle_search(self):
+        if self.mode == "search_suspended":
+            self.mode = None
+        self.focus("searchbar")
+        self.searchbar.toggle_show()
+        self.console.log(self.mode)
 
     def run(self, init=True):
         if init:
@@ -94,13 +129,41 @@ class App:
             self.reload()
         with Live(self.layout, refresh_per_second=60, screen=True):
             result = None
+            self.mode = None
             while result is None:
-                try:
-                    result = self.bindings[getkey()]()
-                except KeyError:
-                    pass
-                except KeyboardInterrupt:
-                    result = self.bindings[keys.CTRL_C]()
+                key = getkey()
+                if key == "s":
+                    if self.mode is None:
+                        self.toggle_search()
+                    elif self.mode == "search_suspended":
+                        self.mode = "search"
+                        self.focus("searchbar")
+                        self.toggle_search()
+                        self.toggle_search()
+                    elif self.mode == "search":
+                        self.searchbar.write(key)
+                elif self.mode == "search":
+                    if key == keys.ESC:
+                        self.toggle_search()
+                    elif key == keys.BACKSPACE:
+                        self.searchbar.backspace()
+                    elif key == keys.ENTER:
+                        self.mode = None
+                        self.focus("searchbar")
+                    elif key.isalnum() or key in ["\\", "/", ".", " "]:
+                        self.searchbar.write(key)
+                else:
+                    if self.mode == "search_suspended":
+                        if key == keys.ESC:
+                            self.mode = None
+                            self.focus("searchbar")
+                            self.toggle_search()
+                    try:
+                        result = self.bindings[key]()
+                    except KeyError:
+                        pass
+                    except KeyboardInterrupt:
+                        result = self.bindings[keys.CTRL_C]()
         return result
 
     def stop(self):

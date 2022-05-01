@@ -1,6 +1,6 @@
 import json
 import os
-from . import ControlTree
+from bookmark.components.widgets import ControlTree
 from bookmark.scripts import del_bookmark
 from bisect import bisect
 from rich.syntax import Syntax
@@ -191,8 +191,12 @@ class DirNode(BookmarkNode):
         for file in sorted(files):
             child = self.add(file, style="cyan", type="file", path=f"{path}/{file}")
 
-    def process(self):
-        if self.processed:
+    def process(self, depth=0, recursive=False, max_depth=-1):
+        if max_depth >= 0 and depth > max_depth:
+            return
+        elif self.processed and not recursive:
+            return
+        elif self.type == "file":
             return
         path = self.path
         try:
@@ -210,6 +214,9 @@ class DirNode(BookmarkNode):
             child.expanded = False
         for file in sorted(files):
             child = self.add(file, style="cyan", type="file", path=f"{path}/{file}")
+        if recursive:
+            for child in self.children:
+                child.process(depth=depth + 1, recursive=recursive)
 
     def toggle_expand(self):
         if self.permission_denied:
@@ -435,6 +442,10 @@ class DirTree(ControlTree):
             self.cursor = 0
             self.nodes[self.cursor].toggle_highlight()
 
+    def process(self, recursive=False, max_depth=-1):
+        for child in self.children:
+            child.process(recursive=recursive, max_depth=max_depth)
+
 
 class BookmarkTree(ControlTree):
     def __init__(
@@ -536,6 +547,10 @@ class BookmarkTree(ControlTree):
         dir_tree = self.dir_trees.get(node.id, None)
         ignores = []
         try:
+            node.label = node.label.plain
+        except AttributeError:
+            pass
+        try:
             ignores += self.ignores["global"]
         except KeyError:
             pass
@@ -558,6 +573,7 @@ class BookmarkTree(ControlTree):
         else:
             dir_tree.ignores = ignores
             dir_tree.reload()
+            dir_tree.center()
         self.app.layout["directory"].renderable.renderable = dir_tree
         self.app.focus("directory")
 
