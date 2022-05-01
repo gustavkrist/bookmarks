@@ -8,6 +8,6 @@ setup(
     package_dir={"": "src"},
     packages=find_packages("bookmark"),
     include_package_data=True,
-    install_requires=["rich-click", "getkey", "rich"],
+    install_requires=["rich-click", "getkey", "rich", "thefuzz", "python-Levenshtein", "regex"],
     entry_points={"console_scripts": ["bm = bookmark.scripts.cli:cli"]},
 )
