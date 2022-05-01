@@ -1,14 +1,11 @@
 import json
 import os
 from . import ControlTree
-from bookmark.util import del_bookmark
+from bookmark.scripts import del_bookmark
 from bisect import bisect
 from rich.syntax import Syntax
 from rich.align import Align
 from rich.panel import Panel
-
-
-from rich.text import Text
 
 
 class BookmarkNode(ControlTree):
@@ -605,6 +602,7 @@ class BookmarkTree(ControlTree):
                 self.children.insert(insertion_point, child)
                 self.tree.nodes[child.id] = child
         self.ignores = ignores
+        selected = self.app.selected
         for id, tree in list(self.dir_trees.items()):
             if id not in self.nodes:
                 self.dir_trees.pop(id)
@@ -624,12 +622,11 @@ class BookmarkTree(ControlTree):
             except KeyError:
                 pass
             self.app.layout["directory"].renderable.renderable.ignores = ignores
-        selected = self.app.selected
         self.app.layout["directory"].renderable.renderable.reload()
         self.app.focus(selected.name)
 
-        def remove(self):
-            node = self.nodes[self.cursor]
-            label = node.label[node.label.rfind("]") + 1 :]
-            del_bookmark(label)
-            self.reload()
+    def remove(self):
+        node = self.nodes[self.cursor]
+        label = node.label[node.label.rfind("]") + 1 :]
+        del_bookmark(label)
+        self.reload()

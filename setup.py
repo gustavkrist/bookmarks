@@ -3,10 +3,11 @@ from setuptools import setup, find_packages
 
 setup(
     name="bookmark",
-    version="0.1.0",
+    version="0.6.0",
     # py_modules=["bookmark"],
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages("bookmark"),
     include_package_data=True,
     install_requires=["click", "getkey", "rich"],
-    entry_points={"console_scripts": ["bm = bookmark:cli"]},
+    entry_points={"console_scripts": ["bm = bookmark.scripts.cli:cli"]},
 )

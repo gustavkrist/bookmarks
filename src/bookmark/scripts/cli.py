@@ -1,9 +1,8 @@
 import os
-from components import App
+from bookmark.components import App
 from rich import print
-from util import add_bookmark, del_bookmark, list_bookmarks
+from . import add_bookmark, del_bookmark, list_bookmarks
 import click
-import pickle
 
 
 @click.group(invoke_without_command=True)

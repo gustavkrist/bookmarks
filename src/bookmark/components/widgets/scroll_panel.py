@@ -1,4 +1,5 @@
 import os
+from . import BookmarkTree
 from rich.segment import Segment
 from rich.syntax import Syntax
 from rich.align import Align
@@ -110,6 +111,13 @@ class ScrollPanel(Panel):
             path = os.path.dirname(path)
         os.chdir(path)
         return "exec /bin/zsh"
+
+    def remove(self):
+        renderable = self.renderable
+        if isinstance(renderable, BookmarkTree):
+            renderable.remove()
+        else:
+            pass
 
     @property
     def actual_height(self):

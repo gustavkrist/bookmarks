@@ -58,6 +58,8 @@ class App:
             "k": lambda: self.selected.renderable.cursor_up(),
             keys.CTRL_D: lambda: self.selected.renderable.cursor_down(5),
             keys.CTRL_U: lambda: self.selected.renderable.cursor_up(5),
+            keys.CTRL_X: lambda: self.selected.renderable.remove(),
+            # keys.CTRL_X: lambda: self.console.log(str(type(self.selected.renderable))),
             keys.ENTER: lambda: self.selected.renderable.enter(),
             "c": lambda: self.selected.renderable.open_in_vscode(),
             "v": lambda: self.selected.renderable.open_in_vim(),
@@ -103,7 +105,7 @@ class App:
 
     def stop(self):
         self.console.save_html(
-            "/Users/gustavkristensen/prototypes/bookmark/bookmarks/logs.html"
+            "/Users/gustavkristensen/prototypes/bookmark/bookmark/logs.html"
         )
         return 0
 
