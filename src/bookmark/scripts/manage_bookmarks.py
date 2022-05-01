@@ -1,4 +1,4 @@
-import click
+import rich_click as click
 import json
 import os
 from rich import box
@@ -60,3 +60,23 @@ def list_bookmarks():
     for name, path in sorted(file_bookmarks):
         table.add_row(Text.from_markup(f":page_facing_up: {name}"), path)
     return table
+
+
+def ignore_element(bookmark, element):
+    if os.getenv("BOOKMARK_PATH") is not None:
+        bookmark_path = os.getenv("BOOKMARK_PATH")
+    else:
+        bookmark_path = os.getenv("HOME") + "/.bookmarks"
+    with open(bookmark_path, "r") as f:
+        json_dict = json.load(f)
+        ignores = json_dict["ignores"]
+    try:
+        if bookmark in ignores:
+            ignores[bookmark].append(element)
+        else:
+            ignores[bookmark] = [element]
+    except KeyError:
+        raise click.ClickException("Invalid bookmark provided")
+    with open(bookmark_path, "w") as f:
+        json_dict["ignores"] = ignores
+        json.dump(json_dict, f, indent=4, separators=(",", ": "), sort_keys=True)
