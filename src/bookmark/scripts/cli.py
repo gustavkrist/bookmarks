@@ -2,28 +2,58 @@ import os
 from bookmark.components import App
 from rich import print
 from . import add_bookmark, del_bookmark, list_bookmarks
-import click
+import rich_click as click
+
+click.rich_click.STYLE_ERRORS_SUGGESTION = "blue italic"
+click.rich_click.ERRORS_SUGGESTION = "Try running the --help flag for more information"
+click.rich_click.MAX_WIDTH = 100
+# click.rich_click.OPTION_GROUPS = {
+#     "bm": [
+#         {"name": "Basic Usage", "options": [""]},
+#         {"name": "Advanced Usage", "options": ["-r", "-h"]},
+#     ]
+# }
+# click.rich_click.COMMAND_GROUPS = {
+#     "cli": [{"name": "Bookmark management", "commands": ["add", "rm", "list"]}]
+# }
 
 
-@click.group(invoke_without_command=True)
+@click.group(
+    invoke_without_command=True,
+    options_metavar="<options>",
+    subcommand_metavar="<command> <args>",
+)
 @click.pass_context
-# @click.option(
-#     "-r",
-#     "--restart",
-#     is_flag=True,
-#     default=False,
-#     show_default=True,
-#     help="Start a fresh instance",
-# )
-def cli(ctx):
+@click.option(
+    "-r",
+    "--restart",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Start a fresh instance",
+)
+@click.option(
+    "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
+)
+def cli(ctx, restart, help):
+    """
+    Open the bookmark dashboard or manage bookmarks.
+
+    If no options or subcommands are passed, the dashboard is opened.
+
+    You can try using --help at the top level and also for specific subcommands.
+    """
     if ctx.invoked_subcommand is None:
-        """Opens the bookmark dashboard"""
-        app = App()
-        exit_code = app.run()
-        while exit_code != 0:
-            if isinstance(exit_code, str):
-                os.system(exit_code)
-            exit_code = app.run(init=False)
+        if help:
+            click.echo(ctx.get_help())
+            ctx.exit()
+        else:
+            app = App()
+            exit_code = app.run()
+            while exit_code != 0:
+                if isinstance(exit_code, str):
+                    os.system(exit_code)
+                exit_code = app.run(init=False)
 
 
 @cli.command(options_metavar="<options>")
@@ -56,8 +86,14 @@ def cli(ctx):
     help="Path for the bookmark to point to",
     type=click.Path(exists=True, resolve_path=True),
 )
-def add(ctx, name_arg, path_arg, name_opt, path_opt):
+@click.option(
+    "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
+)
+def add(ctx, name_arg, path_arg, name_opt, path_opt, help):
     """Add bookmark <name> with path <path>"""
+    if help:
+        click.echo(ctx.get_help())
+        ctx.exit()
     if None not in (name_arg, name_opt):
         raise click.ClickException(
             "<name> positional argument and -n <name> option are mutually exclusive"
@@ -75,7 +111,8 @@ def add(ctx, name_arg, path_arg, name_opt, path_opt):
             click.echo("Missing bookmark name")
             name = input("Bookmark name: ")
     elif path_arg is None and path_opt is None:
-        click.echo("Please provide both <name> and <path>\n")
+        # click.echo("Please provide both <name> and <path>\n")
+        raise click.ClickException("Missing argument <path>")
         click.echo(ctx.get_help())
         ctx.exit()
     name = name_arg if name_opt is None else name_opt
@@ -99,8 +136,14 @@ def add(ctx, name_arg, path_arg, name_opt, path_opt):
     help="Name of bookmark to add",
     type=click.STRING,
 )
-def rm(ctx, name_arg, name_opt):
+@click.option(
+    "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
+)
+def rm(ctx, name_arg, name_opt, help):
     """Delete bookmark with name <name>"""
+    if help:
+        click.echo(ctx.get_help())
+        ctx.exit()
     if None not in (name_arg, name_opt):
         raise click.ClickException(
             "<name> positional argument and -n <name> option are mutually exclusive"
@@ -113,7 +156,14 @@ def rm(ctx, name_arg, name_opt):
     del_bookmark(name)
 
 
-@cli.command()
-def list():
+@cli.command(options_metavar="<options>")
+@click.pass_context
+@click.option(
+    "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
+)
+def list(ctx, help):
     """List all bookmarks"""
+    if help:
+        click.echo(ctx.get_help())
+        ctx.exit()
     print(list_bookmarks())
