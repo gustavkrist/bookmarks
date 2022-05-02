@@ -95,6 +95,11 @@ class ControlTree(Tree):
         panel_height = self.panel.actual_height
         if tree_height <= panel_height or cursor_line < panel_height:
             y_top = 0
+            while (
+                panel_height // 2 - 3 < cursor_line - y_top
+                and tree_height - y_top + 2 > panel_height
+            ):
+                y_top += 1
         elif tree_height - cursor_line <= panel_height:
             y_top = tree_height - panel_height + 2
         else:

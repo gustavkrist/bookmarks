@@ -1,5 +1,6 @@
 from bookmark.components.widgets import BookmarkTree, DirTree
 from bookmark.scripts.search import search
+import os
 from rich.box import ROUNDED
 from rich.panel import Panel
 from rich.text import Text
@@ -15,6 +16,7 @@ class SearchDirTree(DirTree):
         self.bar.searchtree.nodes[self.bar.searchtree.cursor].toggle_highlight()
         self.bar.old_tree.nodes[self.bar.old_tree.cursor].under_cursor = False
         self.bar.old_tree.nodes[self.bar.old_tree.cursor].toggle_highlight()
+        self.bar.old_tree.nodes[self.bar.old_tree.cursor].toggle_expand()
         self.bar.old_tree.nodes[self.bar.old_tree.cursor].expand_upward()
         self.bar.old_tree.center()
         layout.visible = False
@@ -107,7 +109,8 @@ class SearchBar(Panel):
                 searchtree.panel = self.app.layout["bookmarks"].renderable
                 searchtree.panel.y_top = 0
             else:
-                tree.process(recursive=True, max_depth=4)
+                if tree.label != os.getenv("HOME"):
+                    tree.process(recursive=True, max_depth=4)
                 searchtree = SearchDirTree(
                     tree.label,
                     style="cyan",
