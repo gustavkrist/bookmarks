@@ -163,9 +163,9 @@ class SearchBar(Panel):
                 pass
             return
         elif backspace:
-            nodes = search(pattern, self.nodes.values())
+            nodes = search(pattern, self.nodes.values(), fzf_path=self.app.fzf_path)
         else:
-            nodes = search(pattern, self.searchtree.nodes.values())
+            nodes = search(pattern, self.searchtree.nodes.values(), fzf_path=self.app.fzf_path)
         self.searchtree.children = nodes
         self.searchtree.nodes = {node.id: node for node in self.searchtree.children}
         try:

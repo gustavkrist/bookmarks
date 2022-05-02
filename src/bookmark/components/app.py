@@ -4,6 +4,7 @@ from rich.layout import Layout
 from rich.live import Live
 from rich.console import Console
 from bookmark.components.widgets import ScrollPanel, BookmarkTree, SearchBar
+from shutil import which
 
 
 suppress = platform(interrupts={})
@@ -79,6 +80,10 @@ class App:
         self.layout["bookmarks"].renderable.toggle_focus()
         self.bookmarks.enter()
         self.focus("bookmarks")
+        if not which("fzf"):
+            self.fzf_path = ""
+        else:
+            self.fzf_path = "fzf"
 
     def focus(self, element):
         if element == "preview":
@@ -165,9 +170,9 @@ class App:
         return result
 
     def stop(self):
-        self.console.save_html(
-            "/Users/gustavkristensen/prototypes/bookmark/bookmark/logs.html"
-        )
+        # self.console.save_html(
+        #     "/Users/gustavkristensen/prototypes/bookmark/bookmark/logs.html"
+        # )
         return 0
 
     def reload(self):

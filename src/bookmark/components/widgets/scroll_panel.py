@@ -99,6 +99,9 @@ class ScrollPanel(Panel):
             path = renderable.path
         else:
             path = renderable.cursor_path
+        self.app.mode = None
+        self.app.focus("searchbar")
+        self.app.toggle_search()
         return f"lvim '{path}'"
 
     def change_dir(self):
