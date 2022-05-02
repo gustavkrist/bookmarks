@@ -1,7 +1,13 @@
 import os
 from bookmark.components import App
 from rich import print
-from bookmark.scripts import add_bookmark, del_bookmark, list_bookmarks, check_file, reset_file
+from bookmark.scripts import (
+    add_bookmark,
+    del_bookmark,
+    list_bookmarks,
+    check_file,
+    reset_file,
+)
 import rich_click as click
 
 click.rich_click.STYLE_ERRORS_SUGGESTION = "blue italic"
@@ -55,7 +61,9 @@ def cli(ctx, reset, help):
     else:
         file_status = check_file()
     if file_status == "empty" and ctx.invoked_subcommand in [None, "open"]:
-        click.echo("You have added no bookmarks. To show the bookmark dashboard, add a bookmark first.")
+        click.echo(
+            "You have added no bookmarks. To show the bookmark dashboard, add a bookmark first."
+        )
         click.echo(ctx.get_help())
         ctx.exit()
     if ctx.invoked_subcommand is None:
@@ -71,16 +79,18 @@ def open(ctx, help):
     """
     Opens the bookmark dashboard
     """
-    if ctx.invoked_subcommand is None:
-        if help:
-            click.echo(ctx.get_help())
-            ctx.exit()
-        else:
-            app = App()
-            exit_code = app.run()
-            while exit_code != 0 or exit_code == "exec /bin/zsh":
-                if isinstance(exit_code, str):
-                    os.system(exit_code)
+    if help:
+        click.echo(ctx.get_help())
+        ctx.exit()
+    else:
+        app = App()
+        exit_code = app.run()
+        while exit_code != 0:
+            if isinstance(exit_code, str):
+                os.system(exit_code)
+            if exit_code == "exec /bin/zsh":
+                exit_code = 0
+            else:
                 exit_code = app.run(init=False)
 
 
