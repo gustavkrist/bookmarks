@@ -1,7 +1,7 @@
 import os
 from bookmark.components import App
 from rich import print
-from . import add_bookmark, del_bookmark, list_bookmarks
+from bookmark.scripts import add_bookmark, del_bookmark, list_bookmarks, check_file, reset_file
 import rich_click as click
 
 click.rich_click.STYLE_ERRORS_SUGGESTION = "blue italic"
@@ -29,16 +29,16 @@ click.rich_click.COMMAND_GROUPS = {
 @click.pass_context
 @click.option(
     "-r",
-    "--restart",
+    "--reset",
     is_flag=True,
     default=False,
     show_default=True,
-    help="Start a fresh instance",
+    help="Reset bookmark file",
 )
 @click.option(
     "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
 )
-def cli(ctx, restart, help):
+def cli(ctx, reset, help):
     """
     Open the bookmark dashboard or manage bookmarks.
 
@@ -46,28 +46,28 @@ def cli(ctx, restart, help):
 
     You can try using --help at the top level and also for specific subcommands.
     """
+    if help:
+        click.echo(ctx.get_help())
+        ctx.exit()
+    if reset:
+        reset_file()
+        ctx.exit()
+    else:
+        file_status = check_file()
+    if file_status == "empty" and ctx.invoked_subcommand in [None, "open"]:
+        click.echo("You have added no bookmarks. To show the bookmark dashboard, add a bookmark first.")
+        click.echo(ctx.get_help())
+        ctx.exit()
     if ctx.invoked_subcommand is None:
-        if help:
-            click.echo(ctx.get_help())
-            ctx.exit()
-        else:
-            ctx.invoke(open)
+        ctx.invoke(open)
 
 
 @cli.command(options_metavar="<options>")
 @click.pass_context
 @click.option(
-    "-r",
-    "--restart",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Start a fresh instance",
-)
-@click.option(
     "-h", "--help", is_flag=True, default=False, help="Show this message and exit"
 )
-def open(ctx, restart, help):
+def open(ctx, help):
     """
     Opens the bookmark dashboard
     """
@@ -78,7 +78,7 @@ def open(ctx, restart, help):
         else:
             app = App()
             exit_code = app.run()
-            while exit_code != 0:
+            while exit_code != 0 or exit_code == "exec /bin/zsh":
                 if isinstance(exit_code, str):
                     os.system(exit_code)
                 exit_code = app.run(init=False)

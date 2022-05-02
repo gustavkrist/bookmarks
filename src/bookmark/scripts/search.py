@@ -90,15 +90,15 @@ from thefuzz import process
 #     return [label_map[label] for label in node_labels]
 
 
-# def search(pattern, nodes):
-#     label_map = {node.label: node for node in nodes}
-#     node_labels = [
-#         tup[0] for tup in process.extract(pattern, list(label_map.keys()), limit=500)
-#     ]
-#     return [label_map[label] for label in node_labels]
+def search_thefuzz(pattern, nodes):
+    label_map = {node.label: node for node in nodes}
+    node_labels = [
+        tup[0] for tup in process.extract(pattern, list(label_map.keys()), limit=500)
+    ]
+    return [label_map[label] for label in node_labels]
 
 
-def prompt(choices=None, fzf_options="", delimiter="\n"):
+def search_fzf(choices=None, fzf_options="", delimiter="\n", fzf_path="fzf"):
     # convert lists to strings [ 1, 2, 3 ] => "1\n2\n3"
     choices_str = delimiter.join(map(str, choices))
     selection = []
@@ -110,7 +110,7 @@ def prompt(choices=None, fzf_options="", delimiter="\n"):
             input_file.flush()
 
     # Invoke fzf externally and write to output file
-    os.system(f'fzf {fzf_options} < "{input_file.name}" > "{output_file.name}"')
+    os.system(f'{fzf_path} {fzf_options} < "{input_file.name}" > "{output_file.name}"')
 
     # get selected options
     with open(output_file.name, encoding="utf-8") as f:
@@ -123,17 +123,11 @@ def prompt(choices=None, fzf_options="", delimiter="\n"):
     return selection
 
 
-def search(pattern, nodes):
+def search(pattern, nodes, fzf_path=""):
     label_map = {node.label.rstrip("\r"): node for node in nodes}
-    node_labels = prompt(list(label_map.keys()), fzf_options=f"-f {pattern}")
-    try:
+    if fzf_path:
+        node_labels = search_fzf(list(label_map.keys()), fzf_options=f"-f {pattern}", fzf_path=fzf_path)
         result = [label_map[label] for label in node_labels]
-        return result
-    except KeyError:
-        with open("/Users/gustavkristensen/prototypes/bookmark/bookmark/searchlog.txt", "a") as f:
-            for node in nodes:
-                print(node.label.rstrip("\r"), file=f)
-            print(label_map, file=f)
-            print()
-            print(node_labels, file=f)
-        raise click.ClickException("KeyError")
+    else:
+        result = search_thefuzz(pattern, nodes)
+    return result

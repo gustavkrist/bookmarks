@@ -80,3 +80,41 @@ def ignore_element(bookmark, element):
     with open(bookmark_path, "w") as f:
         json_dict["ignores"] = ignores
         json.dump(json_dict, f, indent=4, separators=(",", ": "), sort_keys=True)
+
+
+def check_file():
+    if os.getenv("BOOKMARK_PATH") is not None:
+        bookmark_path = os.getenv("BOOKMARK_PATH")
+    else:
+        bookmark_path = os.getenv("HOME") + "/.bookmarks"
+    with open(bookmark_path, "r") as f:
+        try:
+            json_dict = json.load(f)
+            try:
+                bookmarks = json_dict["bookmarks"]
+                ignores = json_dict["ignores"]
+                for bookmark, path in bookmarks.items():
+                    if not (isinstance(bookmark, str) and isinstance(path, str)):
+                        raise click.ClickException("Invalid .bookmarks file. Run bm -r to reset the file.")
+                for bookmark, ignore_list in ignores.items():
+                    if not (isinstance(bookmark, str) and isinstance(ignore_list, list)):
+                        raise click.ClickException("Invalid .bookmarks file. Run bm -r to reset the file.")
+                    if not all(filter(lambda x: isinstance(x, str), ignore_list)):
+                        raise click.ClickException("Invalid .bookmarks file. Run bm -r to reset the file.")
+                if not bookmarks:
+                    return "empty"
+            except KeyError:
+                raise click.ClickException("Invalid .bookmarks file. Run bm -r to reset the file.")
+        except json.JSONDecodeError:
+            raise click.ClickException("Invalid .bookmarks file. Run bm -r to reset the file.")
+    return "ok"
+
+
+def reset_file():
+    if os.getenv("BOOKMARK_PATH") is not None:
+        bookmark_path = os.getenv("BOOKMARK_PATH")
+    else:
+        bookmark_path = os.getenv("HOME") + "/.bookmarks"
+    blank_dict = {"bookmarks": {}, "ignores": {"global": []}}
+    with open(bookmark_path, "w") as f:
+        json.dump(blank_dict, f)
