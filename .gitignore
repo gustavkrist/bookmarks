@@ -1,6 +1,6 @@
 __pycache__/
 *.egg-info/
 venv/
-
 logs.html
 searchlog.txt
+searching/
