@@ -4,7 +4,7 @@ A CLI-tool with a TUI based on Rich to handle bookmarking directories in shell e
 
 ## Demo
 
-https://user-images.githubusercontent.com/93556921/166963513-4ef32975-3248-44c3-af0d-019e7d5e4e6d.mov
+https://user-images.githubusercontent.com/93556921/166966730-a96a5673-ca14-47e3-9a5e-216572747df1.mov
 
 ## Screenshots:
 
